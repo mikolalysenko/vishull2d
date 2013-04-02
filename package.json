@@ -1,0 +1,41 @@
+{
+  "name": "vishull2d",
+  "version": "0.0.0",
+  "description": "Visible regions for 2D poly-lines",
+  "main": "visibility.js",
+  "directories": {
+    "test": "test"
+  },
+  "dependencies": {
+    "compare-slope": "~0.0.0"
+  },
+  "devDependencies": {
+    "tap": "~0.4.1"
+  },
+  "scripts": {
+    "test": "tap test/*.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git://github.com/mikolalysenko/vishull2d.git"
+  },
+  "keywords": [
+    "visibility",
+    "visible",
+    "2d",
+    "polygon",
+    "line",
+    "geometry",
+    "shadow",
+    "lighting",
+    "game",
+    "math",
+    "ray",
+    "gauss",
+    "occlusion"
+  ],
+  "author": "Mikola Lysenko",
+  "license": "MIT",
+  "readmeFilename": "README.md",
+  "gitHead": "1845699fb78873880cc16d5d74428a83a6af5ea3"
+}
