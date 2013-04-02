@@ -2,6 +2,10 @@ vishull2d
 =========
 Computes the visible region from a point for a given environment represented by a collection of line segments.  [Based on Amit Patel's blog post](http://simblob.blogspot.com/2012/07/2d-visibility.html)
 
+Try out the module yourself in your browser:
+
+http://mikolalysenko.github.com/vishull2d/
+
 Use
 ===
 Just install it using npm:
