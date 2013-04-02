@@ -1,6 +1,6 @@
 {
   "name": "vishull2d",
-  "version": "0.0.0",
+  "version": "0.0.1",
   "description": "Visible regions for 2D poly-lines",
   "main": "visibility.js",
   "directories": {

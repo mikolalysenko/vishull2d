@@ -35,6 +35,8 @@ Computes the visible hull from the point `center`
 * `region` a counter-clockwise oriented simple polygon representing the visible region.
 * `ids` a list of indices into `segments` representing the walls visible from the region
 
+**Note** This code assumes that all segments intersect only at their end points
+
 Credits
 =======
 (c) 2013 Mikola Lysenko.  MIT License
