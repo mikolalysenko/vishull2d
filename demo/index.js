@@ -10,10 +10,7 @@ document.body.appendChild(canvas)
 
 var context = canvas.getContext("2d")
 
-var lines = [
- [[10, 10], [400, 10]]
-]
-
+var lines = []
 var dt = 0.1
 var r = 100
 var cx = width/2
@@ -33,8 +30,7 @@ function redraw(p) {
   context.fillStyle = "#234"
   context.fillRect(0, 0, width, height)
   
-  var result = vishull(lines, p)
-    , region = result.region
+  var region = vishull(lines, p)
   
   context.fillStyle = "rgba(255, 255, 130, 0.5)"
   context.beginPath()
@@ -47,14 +43,9 @@ function redraw(p) {
   context.closePath()
   context.fill()
   
-  
+  context.strokeStyle = "rgba(128, 198, 100, 1.0)"
   for(var i=0; i<lines.length; ++i) {
     var s = lines[i]
-    if(result.ids.indexOf(i) < 0) {
-      context.strokeStyle = "#f00"
-    } else {
-      context.strokeStyle = "#0f0"
-    }
     context.beginPath()
     context.moveTo(s[0][0], s[0][1])
     context.lineTo(s[1][0], s[1][1])
