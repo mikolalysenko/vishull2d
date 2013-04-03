@@ -11,10 +11,7 @@ document.body.appendChild(canvas)
 
 var context = canvas.getContext("2d")
 
-var lines = [
- [[10, 10], [400, 10]]
-]
-
+var lines = []
 var dt = 0.1
 var r = 100
 var cx = width/2
@@ -34,8 +31,7 @@ function redraw(p) {
   context.fillStyle = "#234"
   context.fillRect(0, 0, width, height)
   
-  var result = vishull(lines, p)
-    , region = result.region
+  var region = vishull(lines, p)
   
   context.fillStyle = "rgba(255, 255, 130, 0.5)"
   context.beginPath()
@@ -48,14 +44,9 @@ function redraw(p) {
   context.closePath()
   context.fill()
   
-  
+  context.strokeStyle = "rgba(128, 198, 100, 1.0)"
   for(var i=0; i<lines.length; ++i) {
     var s = lines[i]
-    if(result.ids.indexOf(i) < 0) {
-      context.strokeStyle = "#f00"
-    } else {
-      context.strokeStyle = "#0f0"
-    }
     context.beginPath()
     context.moveTo(s[0][0], s[0][1])
     context.lineTo(s[1][0], s[1][1])
@@ -92,16 +83,32 @@ function segIntersect(s, pt, dx, dy) {
     , ay = s0[1] - pt[1]
     , nn = ay * nx - ax * ny
     , dd = dy * nx - dx * ny
-  return [ dx * nn / dd, dy * nn / dd ]
+  return [ dx * nn / dd + pt[0], dy * nn / dd + pt[1]]
 }
 
 function approxEq(x, y) {
-  return Math.abs(x-y) <= EPSILON * Math.max(Math.abs(x), Math.abs(y))
+  return Math.abs(x-y) <= EPSILON * Math.min(Math.abs(x), Math.abs(y))
+}
+
+function approxCollinear(a, b, c) {
+  return approxEq(a[0] * b[1] + b[0] * c[1] + c[0] * a[1],
+                  a[0] * c[1] + b[0] * a[1] + c[0] * b[1])
 }
 
 function pointsEqual(a, b) {
   return approxEq(a[0], b[0]) && approxEq(a[1], b[1])
 }
+
+function cooriented(a, b, p, q) {
+  var pxqy = p[0] * q[1]
+    , pyqx = p[1] * q[0]
+    , ap = a[0] * p[1] + q[0] * a[1] + pxqy
+    , an = a[0] * q[1] + p[0] * a[1] + pyqx
+    , bp = b[0] * p[1] + q[0] * b[1] + pxqy
+    , bn = b[0] * q[1] + p[0] * b[1] + pyqx
+  return ((ap > an) === (bp > bn)) || approxEq(ap, an) || approxEq(bp, bn)
+}
+
 
 function createVisibleHull(segments, pt) {
   var points = []
@@ -164,11 +171,12 @@ function createVisibleHull(segments, pt) {
         continue
       }
     }
-    if(approxEq(by, 0) && bx > 0 && ay < 0) {
+    //Handle x-touching degeneracy
+    if(bx > 0 && ay < 0 && approxEq(by, 0)) {
       points.push(a)
       continue
     }
-    if(approxEq(ay, 0) && ax > 0 && by < 0) {
+    if(ax > 0 && by < 0 && approxEq(ay, 0)) {
       b[3] = false
       points.push(b)
       continue
@@ -191,14 +199,15 @@ function createVisibleHull(segments, pt) {
   
   //Assemble visible hull
   var vis_hull    = []
-    , segment_ids = []
     , active      = []
+    , pseg        = -1
     , result      = [0,0]
   for(var i=0, np=points.length; i<np; ++i) {
     var event = points[i]
     if(event[3]) {
       if(event[2] >= 0) {
-        active.splice(active.indexOf(event[2]), 1)
+        active[active.indexOf(event[2])] = active[active.length-1]
+        active.pop()
       }
     } else {
       active.push(event[2])
@@ -209,9 +218,8 @@ function createVisibleHull(segments, pt) {
     var min_n = Infinity
       , min_d = 1
       , min_a = -1
-      , d = points[i]
-      , dx = d[0]
-      , dy = d[1]
+      , dx = event[0]
+      , dy = event[1]
     for(var j=0, na=active.length; j<na; ++j) {
       var a = active[j]
         , s = segments[a]
@@ -227,59 +235,51 @@ function createVisibleHull(segments, pt) {
         nn = -nn
         dd = -dd
       }
-      if(nn >= 0 && min_n * dd > min_d * nn) {
-        min_n = nn
-        min_d = dd
-        min_a = a
+      if(nn > 0) {
+        var xx = min_n * dd
+          , yy = min_d * nn
+        if(approxEq(xx, yy)) {
+          s = segments[min_a]
+          if(cooriented(pt, s0, s[0], s[1]) && cooriented(pt, s1, s[0], s[1])) {
+            min_a = a
+          }
+        } else if(xx > yy) {
+          min_n = nn
+          min_d = dd
+          min_a = a
+        }
       }
     }
     if(min_a < 0) {
       continue
     }
     var hull_n = vis_hull.length
+      , i1 = [ dx * min_n / min_d + pt[0], dy * min_n / min_d + pt[1] ]
     if(hull_n === 0) {
-      vis_hull.push(segIntersect(segments[min_a], pt, dx, dy))
-      segment_ids.push(min_a)
-    } else {
-      var pseg = segment_ids[hull_n-1]
-      if(pseg !== min_a || event[2] < 0) {
-        var i0 = segIntersect(segments[pseg], pt, dx, dy)
-          , i1 = segIntersect(segments[min_a], pt, dx, dy)
-        if(pointsEqual(i0, i1)) {
+      vis_hull.push(i1)
+    } else if(pseg !== min_a || event[2] < 0) {
+      var s = segments[min_a]
+        , i0 = segIntersect(segments[pseg], pt, dx, dy)
+      if(!pointsEqual(i0, vis_hull[hull_n-1])) {
+        vis_hull.push(i0)
+        if(!pointsEqual(i0, i1)) {
           vis_hull.push(i1)
-          segment_ids.push(min_a)
-        } else {
-          vis_hull.push(i0)
-          segment_ids.push(-1)
-          vis_hull.push(i1)
-          segment_ids.push(min_a)
         }
+      } else if(!pointsEqual(i1, vis_hull[hull_n-1])) {
+        vis_hull.push(i1)
       }
     }
+    pseg = min_a
   }
   
   //Check if end points need to be joined
-  var hull_n = segment_ids.length
+  var hull_n = vis_hull.length
   if(pointsEqual(vis_hull[hull_n-1], vis_hull[0])) {
     vis_hull.pop()
-    segment_ids.pop()
     --hull_n
   }
   
-  //Fix indices and segment ids
-  for(var i=0; i<hull_n; ++i) {
-    var sid = segment_ids[i]
-    if(sid >= os) {
-      segment_ids[i] = -1
-    }
-    vis_hull[i][0] += pt[0]
-    vis_hull[i][1] += pt[1]
-  }
-  
-  return {
-    region: vis_hull,
-    ids: segment_ids
-  }
+  return vis_hull
 }
 
 module.exports = createVisibleHull
