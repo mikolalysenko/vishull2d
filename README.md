@@ -23,9 +23,7 @@ var lines = [
 ]
 
 //Compute visible hull from the point [0,0]
-var result = vishull2d(lines, [0,0])
-var region = result.region
-var ids = result.ids
+var region = vishull(lines, [0,0])
 ```
 
 ### `require("vishull2d")(segments, center)`
