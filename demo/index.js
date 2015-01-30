@@ -25,7 +25,7 @@ for(var t=0.0; t+dt<2.0*Math.PI; t+=dt) {
 lines.push([[400,300], [300,400]])
 lines.push([[400,300], [400,400]])
 lines.push([[300,400], [400,400]])
-
+var radius = 10;
 function redraw(p) {
   context.fillStyle = "#234"
   context.fillRect(0, 0, width, height)
@@ -55,12 +55,12 @@ function redraw(p) {
   
   context.fillStyle = "rgba(255, 255, 0, 1)"
   context.beginPath()
-  context.arc(p[0], p[1], 10, 0.0, 2.0*Math.PI)
+  context.arc(p[0]-radius, p[1]-radius, 10, 0.0, 2.0*Math.PI)
   context.closePath()
   context.fill()
 }
 
-canvas.addEventListener("click", function(e) {
+canvas.addEventListener("mousemove", function(e) {
   redraw([e.x, e.y])
 })
 
