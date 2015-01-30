@@ -55,7 +55,7 @@ function redraw(p) {
   
   context.fillStyle = "rgba(255, 255, 0, 1)"
   context.beginPath()
-  context.arc(p[0]-radius, p[1]-radius, 10, 0.0, 2.0*Math.PI)
+  context.arc(p[0]-radius, p[1]-radius, radius, 0.0, 2.0*Math.PI)
   context.closePath()
   context.fill()
 }
